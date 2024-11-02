@@ -4,8 +4,11 @@ package main
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/bitfield/script"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
@@ -15,6 +18,15 @@ type Kind mg.Namespace
 type Prometheus mg.Namespace
 type LGTM mg.Namespace
 type Apps mg.Namespace
+
+const PodNotFoundErrMessage = "error: no matching resources found"
+
+func All() error {
+	mg.Deps(Kind.CreateOlly, Kind.CreateApps)
+	mg.SerialDeps(Prometheus.Install, Prometheus.Deploy, LGTM.Deploy)
+
+	return nil
+}
 
 func (Kind) CreateOlly() error {
 	if err := sh.RunV("kind", "create", "cluster", "--name", "observability-stack"); err != nil {
@@ -59,7 +71,28 @@ func (Prometheus) Install() error {
 		return err
 	}
 
-	if err := sh.RunV("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/name=prometheus-operator"); err != nil {
+	// pods might not be immediately available after creation, hence we attempt the wait with backoff
+	err := backoff.Retry(
+		func() error {
+			o, err := sh.Output("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/name=prometheus-operator", "--timeout", "120s")
+
+			if err != nil {
+				if strings.Contains(o, PodNotFoundErrMessage) {
+					fmt.Println("permanent")
+
+					return backoff.Permanent(err)
+				}
+
+				return err
+
+			} else {
+				fmt.Println("again")
+				return err
+			}
+
+		}, backoff.WithMaxRetries(backoff.NewConstantBackOff(5*time.Second), 6))
+
+	if err != nil {
 		return err
 	}
 
@@ -75,7 +108,28 @@ func (Prometheus) Deploy() error {
 		return err
 	}
 
-	if err := sh.RunV("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus", "--timeout", "120s"); err != nil {
+	// pods might not be immediately available after creation, hence we attempt the wait with backoff
+	err := backoff.Retry(
+		func() error {
+			o, err := sh.Output("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus", "--timeout", "120s")
+
+			if err != nil {
+				if strings.Contains(o, PodNotFoundErrMessage) {
+					fmt.Println("permanent")
+
+					return backoff.Permanent(err)
+				}
+
+				return err
+
+			} else {
+				fmt.Println("again")
+				return err
+			}
+
+		}, backoff.WithMaxRetries(backoff.NewConstantBackOff(5*time.Second), 6))
+
+	if err != nil {
 		return err
 	}
 
@@ -97,6 +151,15 @@ func (Prometheus) Remove() error {
 	}
 
 	if err := sh.RunV("kubectl", "delete", "-f", "deploy/prometheus/operator/bundle.yaml"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (Prometheus) Forward() error {
+	// todo remove existing custom resources in each namespace
+	if err := sh.RunV("kubectl", "port-forward", "svc/prometheus", "9090"); err != nil {
 		return err
 	}
 
@@ -133,23 +196,6 @@ func (LGTM) Forward() error {
 
 	return nil
 }
-
-// TODO fw all
-// sudo -E /home/linuxbrew/.linuxbrew/bin/kubefwd svc
-
-// TODO continue here (app, service monitor)
-// https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/config-other-methods/prometheus/prometheus-operator/
-
-// TODO continue instrumentation and simple http server
-// https://opentelemetry.io/docs/languages/go/getting-started/
-
-// Document Prometheus fwd urls
-// http://localhost:9090/config
-// http://localhost:9090/targets
-
-// TODO document use prometheus INTERNAL in grafana dashboard
-// http://prometheus-operated.default.svc:9090
-// import dashboard 3662
 
 func (Apps) Deploy() error {
 	if err := sh.RunV("kubectl", "apply", "-f", "deploy/apps/sample/deployment.yaml"); err != nil {

@@ -4,6 +4,7 @@ go 1.23.2
 
 require (
 	github.com/bitfield/script v0.22.1
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/magefile/mage v1.15.0
 )
 
