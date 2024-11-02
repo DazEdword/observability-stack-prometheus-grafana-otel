@@ -75,7 +75,7 @@ func (Prometheus) Deploy() error {
 		return err
 	}
 
-	if err := sh.RunV("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus"); err != nil {
+	if err := sh.RunV("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus", "--timeout", "120s"); err != nil {
 		return err
 	}
 
@@ -142,6 +142,14 @@ func (LGTM) Forward() error {
 
 // TODO continue instrumentation and simple http server
 // https://opentelemetry.io/docs/languages/go/getting-started/
+
+// Document Prometheus fwd urls
+// http://localhost:9090/config
+// http://localhost:9090/targets
+
+// TODO document use prometheus INTERNAL in grafana dashboard
+// http://prometheus-operated.default.svc:9090
+// import dashboard 3662
 
 func (Apps) Deploy() error {
 	if err := sh.RunV("kubectl", "apply", "-f", "deploy/apps/sample/deployment.yaml"); err != nil {
