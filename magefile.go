@@ -14,6 +14,7 @@ import (
 type Kind mg.Namespace
 type Prometheus mg.Namespace
 type LGTM mg.Namespace
+type Apps mg.Namespace
 
 func (Kind) CreateOlly() error {
 	if err := sh.RunV("kind", "create", "cluster", "--name", "observability-stack"); err != nil {
@@ -43,37 +44,6 @@ func (Kind) CreateApps() error {
 func (Kind) DeleteApps() error {
 	// TODO confirmation prompt
 	if err := sh.RunV("kind", "delete", "cluster", "--name", "demo-apps"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (LGTM) Deploy() error {
-	if err := sh.RunV("helm", "upgrade", "-f", "deploy/lgtm/values.yaml", "observability-stack", "grafana/lgtm-distributed", "--create-namespace", "--namespace", "monitoring", "--install"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (LGTM) Forward() error {
-	password, err := script.Exec(`kubectl get secret --namespace monitoring observability-stack-grafana -o jsonpath="{.data.admin-password}"`).Exec("base64 --decode").String()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Admin password:")
-	fmt.Printf("%s\n\n", password)
-
-	podName, err := script.Exec(`kubectl get pods --namespace monitoring -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=observability-stack" -o jsonpath="{.items[0].metadata.name}"`).String()
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Forwarding pod %s\n\n", podName)
-
-	if err := sh.RunV("kubectl", "--namespace", "monitoring", "port-forward", podName, "3000"); err != nil {
 		return err
 	}
 
@@ -113,6 +83,10 @@ func (Prometheus) Deploy() error {
 		return err
 	}
 
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/servicemonitor.yaml"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -129,6 +103,37 @@ func (Prometheus) Remove() error {
 	return nil
 }
 
+func (LGTM) Deploy() error {
+	if err := sh.RunV("helm", "upgrade", "-f", "deploy/lgtm/values.yaml", "observability-stack", "grafana/lgtm-distributed", "--create-namespace", "--namespace", "monitoring", "--install"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (LGTM) Forward() error {
+	password, err := script.Exec(`kubectl get secret --namespace monitoring observability-stack-grafana -o jsonpath="{.data.admin-password}"`).Exec("base64 --decode").String()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Admin password:")
+	fmt.Printf("%s\n\n", password)
+
+	podName, err := script.Exec(`kubectl get pods --namespace monitoring -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=observability-stack" -o jsonpath="{.items[0].metadata.name}"`).String()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Forwarding pod %s\n\n", podName)
+
+	if err := sh.RunV("kubectl", "--namespace", "monitoring", "port-forward", podName, "3000"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // TODO fw all
 // sudo -E /home/linuxbrew/.linuxbrew/bin/kubefwd svc
 
@@ -137,3 +142,19 @@ func (Prometheus) Remove() error {
 
 // TODO continue instrumentation and simple http server
 // https://opentelemetry.io/docs/languages/go/getting-started/
+
+func (Apps) Deploy() error {
+	if err := sh.RunV("kubectl", "apply", "-f", "deploy/apps/sample/deployment.yaml"); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("kubectl", "apply", "-f", "deploy/apps/sample/service.yaml"); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("kubectl", "apply", "-f", "deploy/apps/sample/servicemonitor.yaml"); err != nil {
+		return err
+	}
+
+	return nil
+}
