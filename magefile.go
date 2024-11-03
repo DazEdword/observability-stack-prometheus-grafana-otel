@@ -23,7 +23,19 @@ const PodNotFoundErrMessage = "error: no matching resources found"
 
 func All() error {
 	mg.Deps(Kind.CreateOlly, Kind.CreateApps)
+
+	// move context to Olly cluster and install/deploy all
+	if err := sh.RunV("kubectx", "kind-observability-stack"); err != nil {
+		return err
+	}
+
 	mg.SerialDeps(Prometheus.Install, Prometheus.Deploy, LGTM.Deploy)
+
+	return nil
+}
+
+func DeleteAll() error {
+	mg.SerialDeps(Kind.DeleteApps, Kind.DeleteOlly)
 
 	return nil
 }
@@ -78,15 +90,12 @@ func (Prometheus) Install() error {
 
 			if err != nil {
 				if strings.Contains(o, PodNotFoundErrMessage) {
-					fmt.Println("permanent")
-
 					return backoff.Permanent(err)
 				}
 
 				return err
 
 			} else {
-				fmt.Println("again")
 				return err
 			}
 

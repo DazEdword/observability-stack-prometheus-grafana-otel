@@ -8,17 +8,21 @@ Default values: https://github.com/grafana/helm-charts/blob/main/charts/lgtm-dis
 
 # Prerequirements
 
-- go 1.23
-- mage
-- kubectl
-- kind
-- kustomize
-- helm
-- jq
+- `go` 1.23
+- `mage` 1.15.0
+- `kubectl` v1.30.1
+- `kind` v0.24.0
+- `kustomize` v5.4.1
+- `skaffold` v2.13.2
+- `helm` v3.15.0
+- `jq` jq-1.7.1
 
 # Installation
 
-## Option 1: All-in-one
+## Option 1: Skaffold
+// TODO
+
+## Option 2: All-in-one (Mage)
 
 Feel free to use this installation if you start form scratch, and prefer to have the full installation performed automatically.
 
@@ -29,7 +33,7 @@ Feel free to use this installation if you start form scratch, and prefer to have
 mage all
 ```
 
-## Option 2: Manual
+## Option 3: Manual (Mage)
 
 Run every step only after successful completion of the previous one, in the order specified above.
 
@@ -84,3 +88,6 @@ mage prometheus:forward
 // TODO document use prometheus INTERNAL in grafana dashboard
 // http://prometheus-operated.default.svc:9090
 // import dashboard 3662
+
+// TODO custom app and cluster federation
+// https://kodekloud.com/community/t/multi-cluster-monitoring-using-prometheus/401110/2
