@@ -41,7 +41,7 @@ func DeleteAll() error {
 }
 
 func (Kind) CreateOlly() error {
-	if err := sh.RunV("kind", "create", "cluster", "--name", "observability-stack"); err != nil {
+	if err := sh.RunV("kind", "create", "cluster", "--name", "observability-stack", "--config=deploy/clusterconfig.yaml"); err != nil {
 		return err
 	}
 
@@ -143,6 +143,10 @@ func (Prometheus) Deploy() error {
 		return err
 	}
 
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/extservice.yaml"); err != nil {
+		return err
+	}
+
 	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/servicemonitor.yaml"); err != nil {
 		return err
 	}
@@ -185,6 +189,9 @@ func (LGTM) Forward() error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("Username:")
+	fmt.Printf("%s\n\n", "admin")
 
 	fmt.Println("Admin password:")
 	fmt.Printf("%s\n\n", password)
