@@ -36,6 +36,41 @@ grafana:
               datasourceUid: prom
             serviceMap:
               datasourceUid: prom
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          # Access mode - proxy (server in the UI) or direct (browser in the UI).
+          url: http://172.19.0.1:30900
+          jsonData:
+            httpMethod: POST
+            manageAlerts: true
+            prometheusType: Prometheus
+            prometheusVersion: 2.55.0
+            cacheLevel: 'High'
+            disableRecordingRules: false
+            incrementalQueryOverlapWindow: 10m
+            exemplarTraceIdDestinations:
+              # Field with internal link pointing to data source in Grafana.
+              # datasourceUid value can be anything, but it should be unique across all defined data source uids.
+              - datasourceUid: my_unique_tracing_uid
+                name: traceID
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'default'
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+  dashboards:
+    default:
+      prometheus-2.0-overview:
+          gnetId: 3662
+          datasource: Prometheus
 
 loki:
   # -- Deploy Loki if enabled. See [upstream readme](https://github.com/grafana/helm-charts/tree/main/charts/loki-distributed#values) for full values reference.

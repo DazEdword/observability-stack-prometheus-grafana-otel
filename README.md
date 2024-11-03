@@ -57,8 +57,8 @@ mage LGTM:deploy
 
 # Usage
 
-After forwarding Grafana, it will be available in `http://localhost:3000`.
-
+The stack is configured to include the `prometheus` data source and a `prometheus` example dashboard, as defined in `deploy/lgtm/values.yaml`.
+After forwarding Grafana, the application will be available at `http://localhost:3000`.
 
 ```sh
 # forward Grafana for localhost access
@@ -66,10 +66,9 @@ After forwarding Grafana, it will be available in `http://localhost:3000`.
 mage LGTM:forward
 ```
 
-For convenience, `prometheus` service for the global instance
-is exposed at `http://localhost:30900`.
-
+For convenience, the `prometheus` service for the global instance is exposed at `http://localhost:30900`.
 Optionally, any of the `prometheus` instances can also be forwarded an accessed in `http://localhost:9090`.
+These can be useful for user access via browser UI.
 
 ```sh
 # optionally forward prometheus
@@ -77,32 +76,22 @@ Optionally, any of the `prometheus` instances can also be forwarded an accessed 
 mage prometheus:forward
 ```
 
-When configuring `prometheus` as a data source in `grafana`, the internal node ip needs to be used instead, followed by the exposed service.
-For instance: `http://172.19.0.2:30900`
+Some useful URLs:
+- http://localhost:30900/config
+- http://localhost:30900/targets
 
 
+When configuring `prometheus` as a data source in `grafana`, the host machine IP needs to be used instead, followed by the exposed service.
+Kind's host machine IP is always `172.19.0.1`, and as such it can be used reliably to point to the exposed `prometheus` instance.
+`http://172.19.0.1:30900`
+
+> **_NOTE:_**  The node's Internal IP could be use instead and it would similarly work. Find the node's internal IP with the command `kubectl get nodes -o wide`.
+> **_NOTE:_**  If the Grafana and Prometheus setups live within the same cluster, the internal service can also be used: `http://prometheus-operated.default.svc:9090`.
 
 # Learn more
 // TODO continue instrumentation and simple http server
 - [Open Telemetry](https://opentelemetry.io/docs/languages/go/getting-started/)
 
-// TODO Document Prometheus fwd urls
-// http://localhost:30900/config
-// http://localhost:30900/targets
-
 // TODO document use prometheus INTERNAL in grafana dashboard
 // http://prometheus-operated.default.svc:9090
-
-// In kind, 172.19.0.1 always refers to the host machine
-// http://172.19.0.1:30900
-
-// nodeport URI also works
-// http://172.19.0.2:30900
-// get internal IP
-// kubectl get nodes -o wide
-
-
-// import dashboard 3662
-
-// TODO prometheus ingress in global
 // TODO custom app and cluster remote_write from local to global
