@@ -19,10 +19,7 @@ Default values: https://github.com/grafana/helm-charts/blob/main/charts/lgtm-dis
 
 # Installation
 
-## Option 1: Skaffold
-// TODO
-
-## Option 2: All-in-one (Mage)
+## Option 1: All-in-one (Mage)
 
 Feel free to use this installation if you start form scratch, and prefer to have the full installation performed automatically.
 
@@ -33,7 +30,7 @@ Feel free to use this installation if you start form scratch, and prefer to have
 mage all
 ```
 
-## Option 3: Manual (Mage)
+## Option 2: Manual (Mage)
 
 Run every step only after successful completion of the previous one, in the order specified above.
 

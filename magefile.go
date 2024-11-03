@@ -124,15 +124,12 @@ func (Prometheus) Deploy() error {
 
 			if err != nil {
 				if strings.Contains(o, PodNotFoundErrMessage) {
-					fmt.Println("permanent")
-
 					return backoff.Permanent(err)
 				}
 
 				return err
 
 			} else {
-				fmt.Println("again")
 				return err
 			}
 
