@@ -42,18 +42,39 @@ mage kind:createOlly
 
 ```sh
 # install prometheus operator
-mage prometheus:install
+mage prometheus:installglobal
 ```
 
 ```sh
 # deploy prometheus
-mage prometheus:deploy
+mage prometheus:deployglobal
 ```
 
 ```sh
 # deploy the LGTM stack
 mage LGTM:deploy
 ```
+
+```sh
+# create kind apps cluster
+mage kind:createApps
+```
+
+```sh
+# install prometheus operator
+mage prometheus:installwriter
+```
+
+```sh
+# deploy prometheus (remote writer mode)
+mage prometheus:deployremote
+```
+
+```sh
+# deploy instrumented apps (example app)
+mage apps:deploy
+```
+
 
 # Usage
 
@@ -63,6 +84,8 @@ After forwarding Grafana, the application will be available at `http://localhost
 ```sh
 # forward Grafana for localhost access
 # access the application in localhost:3000 with user 'admin' and the password shown in stdout
+kubectx kind-observability-stack
+
 mage LGTM:forward
 ```
 
