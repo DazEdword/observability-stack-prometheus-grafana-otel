@@ -1,7 +1,9 @@
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
-  name: prometheus
+  name: prometheus-writer
 spec:
   serviceAccountName: prometheus
   serviceMonitorSelector: {}
+  remoteWrite: 
+    - url: "http://172.19.0.1:30900/api/v1/write"

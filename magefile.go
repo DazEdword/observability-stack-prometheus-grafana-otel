@@ -24,12 +24,9 @@ const PodNotFoundErrMessage = "error: no matching resources found"
 func All() error {
 	mg.Deps(Kind.CreateOlly, Kind.CreateApps)
 
-	// move context to Olly cluster and install/deploy all
-	if err := sh.RunV("kubectx", "kind-observability-stack"); err != nil {
-		return err
-	}
-
-	mg.SerialDeps(Prometheus.Install, Prometheus.Deploy, LGTM.Deploy)
+	// separated deifferent install deps since they are designed in mage to run exactly once
+	mg.SerialDeps(Prometheus.InstallGlobal, Prometheus.DeployGlobal, LGTM.Deploy)
+	mg.SerialDeps(Prometheus.InstallWriter, Prometheus.DeployRemote, Apps.Deploy)
 
 	return nil
 }
@@ -41,7 +38,7 @@ func DeleteAll() error {
 }
 
 func (Kind) CreateOlly() error {
-	if err := sh.RunV("kind", "create", "cluster", "--name", "observability-stack", "--config=deploy/clusterconfig.yaml"); err != nil {
+	if err := sh.RunV("kind", "create", "cluster", "--name", "observability-stack", "--config=deploy/ollyclusterconfig.yaml"); err != nil {
 		return err
 	}
 
@@ -58,7 +55,7 @@ func (Kind) DeleteOlly() error {
 }
 
 func (Kind) CreateApps() error {
-	if err := sh.RunV("kind", "create", "cluster", "--name", "demo-apps"); err != nil {
+	if err := sh.RunV("kind", "create", "cluster", "--name", "demo-apps", "--config=deploy/appsclusterconfig.yaml"); err != nil {
 		return err
 	}
 
@@ -74,7 +71,20 @@ func (Kind) DeleteApps() error {
 	return nil
 }
 
-func (Prometheus) Install() error {
+func (Prometheus) InstallGlobal() error {
+	return prometheusInstall("kind-observability-stack")
+}
+
+func (Prometheus) InstallWriter() error {
+	return prometheusInstall("kind-demo-apps")
+}
+
+func prometheusInstall(context string) error {
+	// switch context
+	if err := sh.RunV("kubectx", context); err != nil {
+		return err
+	}
+
 	if err := sh.RunV("kubectl", "apply", "-f", "deploy/prometheus/namespace.yaml"); err != nil {
 		return err
 	}
@@ -94,7 +104,6 @@ func (Prometheus) Install() error {
 				}
 
 				return err
-
 			} else {
 				return err
 			}
@@ -112,15 +121,15 @@ func (Prometheus) Install() error {
 	return nil
 }
 
-func (Prometheus) Deploy() error {
-	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/instance.yaml"); err != nil {
+func (Prometheus) DeployGlobal() error {
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/global/instance.yaml"); err != nil {
 		return err
 	}
 
 	// pods might not be immediately available after creation, hence we attempt the wait with backoff
 	err := backoff.Retry(
 		func() error {
-			o, err := sh.Output("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus", "--timeout", "120s")
+			o, err := sh.Output("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus-global", "--timeout", "120s")
 
 			if err != nil {
 				if strings.Contains(o, PodNotFoundErrMessage) {
@@ -143,7 +152,49 @@ func (Prometheus) Deploy() error {
 		return err
 	}
 
-	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/extservice.yaml"); err != nil {
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/global/extservice.yaml"); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/servicemonitor.yaml"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (Prometheus) DeployRemote() error {
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/writer/instance.yaml"); err != nil {
+		return err
+	}
+
+	// pods might not be immediately available after creation, hence we attempt the wait with backoff
+	err := backoff.Retry(
+		func() error {
+			o, err := sh.Output("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus-writer", "--timeout", "120s")
+
+			if err != nil {
+				if strings.Contains(o, PodNotFoundErrMessage) {
+					return backoff.Permanent(err)
+				}
+
+				return err
+
+			} else {
+				return err
+			}
+
+		}, backoff.WithMaxRetries(backoff.NewConstantBackOff(5*time.Second), 6))
+
+	if err != nil {
+		return err
+	}
+
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/service.yaml"); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/writer/extservice.yaml"); err != nil {
 		return err
 	}
 

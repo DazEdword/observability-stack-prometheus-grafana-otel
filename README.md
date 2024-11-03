@@ -78,7 +78,8 @@ mage prometheus:forward
 
 Some useful URLs:
 - http://localhost:30900/config
-- http://localhost:30900/targets
+- http://localhost:30900/targets: shows global cluster targets
+- http://localhost:30900/graph: metrics explorer will show metrics from both the global and writer clusters.
 
 
 When configuring `prometheus` as a data source in `grafana`, the host machine IP needs to be used instead, followed by the exposed service.
@@ -89,9 +90,5 @@ Kind's host machine IP is always `172.19.0.1`, and as such it can be used reliab
 > **_NOTE:_**  If the Grafana and Prometheus setups live within the same cluster, the internal service can also be used: `http://prometheus-operated.default.svc:9090`.
 
 # Learn more
-// TODO continue instrumentation and simple http server
 - [Open Telemetry](https://opentelemetry.io/docs/languages/go/getting-started/)
 
-// TODO document use prometheus INTERNAL in grafana dashboard
-// http://prometheus-operated.default.svc:9090
-// TODO custom app and cluster remote_write from local to global
