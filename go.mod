@@ -1,4 +1,4 @@
-module github.com/DazEdword/grafana-lgtm
+module github.com/DazEdword/observability-stack-otel
 
 go 1.23.2
 

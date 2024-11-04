@@ -4,11 +4,9 @@ package main
 
 import (
 	"fmt"
-	"strings"
-	"time"
 
+	wait "github.com/DazEdword/observability-stack-otel/internal"
 	"github.com/bitfield/script"
-	"github.com/cenkalti/backoff/v4"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
@@ -19,7 +17,13 @@ type Prometheus mg.Namespace
 type LGTM mg.Namespace
 type Apps mg.Namespace
 
-const PodNotFoundErrMessage = "error: no matching resources found"
+func Setup() error {
+	if err := sh.RunV("brew", "install", "mage", "kubectl", "kind", "kustomize", "txn2/tap/kubefwd", "helm", "jq"); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func All() error {
 	mg.Deps(Kind.CreateOlly, Kind.CreateApps)
@@ -94,22 +98,7 @@ func prometheusInstall(context string) error {
 	}
 
 	// pods might not be immediately available after creation, hence we attempt the wait with backoff
-	err := backoff.Retry(
-		func() error {
-			o, err := sh.Output("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/name=prometheus-operator", "--timeout", "120s")
-
-			if err != nil {
-				if strings.Contains(o, PodNotFoundErrMessage) {
-					return backoff.Permanent(err)
-				}
-
-				return err
-			} else {
-				return err
-			}
-
-		}, backoff.WithMaxRetries(backoff.NewConstantBackOff(5*time.Second), 6))
-
+	err := wait.ForPodWithConstantBackoff("app.kubernetes.io/name=prometheus-operator", "120s")
 	if err != nil {
 		return err
 	}
@@ -127,23 +116,7 @@ func (Prometheus) DeployGlobal() error {
 	}
 
 	// pods might not be immediately available after creation, hence we attempt the wait with backoff
-	err := backoff.Retry(
-		func() error {
-			o, err := sh.Output("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus-global", "--timeout", "120s")
-
-			if err != nil {
-				if strings.Contains(o, PodNotFoundErrMessage) {
-					return backoff.Permanent(err)
-				}
-
-				return err
-
-			} else {
-				return err
-			}
-
-		}, backoff.WithMaxRetries(backoff.NewConstantBackOff(5*time.Second), 6))
-
+	err := wait.ForPodWithConstantBackoff("app.kubernetes.io/instance=prometheus-global", "120s")
 	if err != nil {
 		return err
 	}
@@ -156,7 +129,7 @@ func (Prometheus) DeployGlobal() error {
 		return err
 	}
 
-	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/servicemonitor.yaml"); err != nil {
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/global/servicemonitor.yaml"); err != nil {
 		return err
 	}
 
@@ -169,23 +142,7 @@ func (Prometheus) DeployRemote() error {
 	}
 
 	// pods might not be immediately available after creation, hence we attempt the wait with backoff
-	err := backoff.Retry(
-		func() error {
-			o, err := sh.Output("kubectl", "wait", "--for=condition=Ready", "pods", "-l", "app.kubernetes.io/instance=prometheus-writer", "--timeout", "120s")
-
-			if err != nil {
-				if strings.Contains(o, PodNotFoundErrMessage) {
-					return backoff.Permanent(err)
-				}
-
-				return err
-
-			} else {
-				return err
-			}
-
-		}, backoff.WithMaxRetries(backoff.NewConstantBackOff(5*time.Second), 6))
-
+	err := wait.ForPodWithConstantBackoff("app.kubernetes.io/instance=prometheus-writer", "120s")
 	if err != nil {
 		return err
 	}
@@ -198,7 +155,7 @@ func (Prometheus) DeployRemote() error {
 		return err
 	}
 
-	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/servicemonitor.yaml"); err != nil {
+	if err := sh.RunV("kubectl", "create", "-f", "deploy/prometheus/writer/servicemonitor.yaml"); err != nil {
 		return err
 	}
 
@@ -236,6 +193,11 @@ func (LGTM) Deploy() error {
 }
 
 func (LGTM) Forward() error {
+	// switch context
+	if err := sh.RunV("kubectx", "kind-observability-stack"); err != nil {
+		return err
+	}
+
 	password, err := script.Exec(`kubectl get secret --namespace monitoring observability-stack-grafana -o jsonpath="{.data.admin-password}"`).Exec("base64 --decode").String()
 	if err != nil {
 		return err

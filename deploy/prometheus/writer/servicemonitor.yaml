@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    serviceMonitorSelector: prometheus
+  name: prometheus
+  namespace: default
+spec:
+  endpoints:
+  - interval: 30s
+    targetPort: 9090
+    path: /metrics
+  - relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_node_name]
+      targetLabel: instance
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      operated-prometheus: "true"

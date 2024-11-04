@@ -1,6 +1,14 @@
 # Observability Stack
 Observability stack with Open Telemetry, Prometheus, LGTM (Grafana).
 
+This repository includes a multi-cluster setup serving as a practical Grafana example, with Prometheus as a data source.
+
+Cluster 1 (`kind-observability-stack`) has the full Grafana LGTM stack and a Prometheus instance, configured  write receiver.
+It also includes a service monitoring setup and a dashboard to monitor the Prometheus installation itself.
+
+Cluster 2 (`kind-demo-apps`) has another Prometheus instance, this time configured as a remote writer and pointing to the global instance, and
+an example app generating metrics that are sent remotely.
+
 ## Grafana
 
 Helm chart available: https://github.com/grafana/helm-charts/releases/tag/lgtm-distributed-2.1.0
@@ -8,16 +16,27 @@ Default values: https://github.com/grafana/helm-charts/blob/main/charts/lgtm-dis
 
 # Prerequirements
 
+Pre-setup:
 - `go` 1.23
+- `brew` 4.4.3
+
+Dev dependencies:
 - `mage` 1.15.0
-- `kubectl` v1.30.1
+- `kubectl` v1.31.2
 - `kind` v0.24.0
 - `kustomize` v5.4.1
-- `skaffold` v2.13.2
+- `kubefwd` 1.22.5
 - `helm` v3.15.0
 - `jq` jq-1.7.1
 
 # Installation
+
+Dev dependencies can be installed manually, or automatically via `brew`:
+
+```sh
+# create kind observability cluster
+mage setup
+```
 
 ## Option 1: All-in-one (Mage)
 
@@ -32,7 +51,7 @@ mage all
 
 ## Option 2: Manual (Mage)
 
-Run every step only after successful completion of the previous one, in the order specified above.
+Run every step only after successful completion of the previous one, in the order specified below.
 
 
 ```sh
@@ -114,4 +133,9 @@ Kind's host machine IP is always `172.19.0.1`, and as such it can be used reliab
 
 # Learn more
 - [Open Telemetry](https://opentelemetry.io/docs/languages/go/getting-started/)
+- [Prometheus CRDs](https://doc.crds.dev/github.com/prometheus-operator/prometheus-operator/monitoring.coreos.com/Prometheus/v1@v0.77.1)
+- [Prometheus Remote Write](https://last9.io/blog/what-is-prometheus-remote-write/)
+- [Grafana Provisioning](https://grafana.com/tutorials/provision-dashboards-and-data-sources/)
+- [Grafana Data Source - Prometheus](https://grafana.com/docs/grafana/latest/datasources/prometheus/)
+
 
