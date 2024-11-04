@@ -100,11 +100,11 @@ mage apps:deploy
 The stack is configured to include the `prometheus` data source and a `prometheus` example dashboard, as defined in `deploy/lgtm/values.yaml`.
 After forwarding Grafana, the application will be available at `http://localhost:3000`.
 
+> **_NOTE:_**  The Grafana user and password will be visible in the forward command's output
+
 ```sh
 # forward Grafana for localhost access
 # access the application in localhost:3000 with user 'admin' and the password shown in stdout
-kubectx kind-observability-stack
-
 mage LGTM:forward
 ```
 
