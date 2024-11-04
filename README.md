@@ -2,6 +2,7 @@
 Observability stack with Prometheus, LGTM (Grafana), Open Telemetry.
 
 This repository includes a multi-cluster setup serving as a practical Grafana example, with Prometheus as a data source.
+The setup is based on Kind local cluster, and it's completely self contained, designed to run locally in UNIX systems.
 
 Cluster 1 (`kind-observability-stack`) has the full Grafana LGTM stack and a Prometheus instance, configured  write receiver.
 It also includes a service monitoring setup and a dashboard to monitor the Prometheus installation itself.
