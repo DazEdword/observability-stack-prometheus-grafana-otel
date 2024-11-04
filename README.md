@@ -135,7 +135,9 @@ Kind's host machine IP is always `172.19.0.1`, and as such it can be used reliab
 - [Open Telemetry](https://opentelemetry.io/docs/languages/go/getting-started/)
 - [Prometheus CRDs](https://doc.crds.dev/github.com/prometheus-operator/prometheus-operator/monitoring.coreos.com/Prometheus/v1@v0.77.1)
 - [Prometheus Remote Write](https://last9.io/blog/what-is-prometheus-remote-write/)
+- [Prometheus Multi Cluster](https://sysrant.com/posts/prometheus-multi-cluster/)
 - [Grafana Provisioning](https://grafana.com/tutorials/provision-dashboards-and-data-sources/)
 - [Grafana Data Source - Prometheus](https://grafana.com/docs/grafana/latest/datasources/prometheus/)
+
 
 
