@@ -1,5 +1,5 @@
 # Observability Stack
-Observability stack with Open Telemetry, Prometheus, LGTM (Grafana).
+Observability stack with Prometheus, LGTM (Grafana), Open Telemetry.
 
 This repository includes a multi-cluster setup serving as a practical Grafana example, with Prometheus as a data source.
 
