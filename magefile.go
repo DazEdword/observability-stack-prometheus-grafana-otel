@@ -238,3 +238,11 @@ func (Apps) Deploy() error {
 
 	return nil
 }
+
+func Lint() error {
+	if err := sh.RunV("golangci-lint", "run"); err != nil {
+		return err
+	}
+
+	return nil
+}
