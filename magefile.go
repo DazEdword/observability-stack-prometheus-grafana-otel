@@ -18,7 +18,7 @@ type LGTM mg.Namespace
 type Apps mg.Namespace
 
 func Setup() error {
-	if err := sh.RunV("brew", "install", "mage", "kubectl", "kind", "kustomize", "txn2/tap/kubefwd", "helm", "jq"); err != nil {
+	if err := sh.RunV("brew", "install", "mage", "kubectl", "kubectx", "kind", "kustomize", "txn2/tap/kubefwd", "helm", "jq"); err != nil {
 		return err
 	}
 
@@ -28,7 +28,7 @@ func Setup() error {
 func All() error {
 	mg.Deps(Kind.CreateOlly, Kind.CreateApps)
 
-	// separated deifferent install deps since they are designed in mage to run exactly once
+	// separated different install deps since they are designed in mage to run exactly once
 	mg.SerialDeps(Prometheus.InstallGlobal, Prometheus.DeployGlobal, LGTM.Deploy)
 	mg.SerialDeps(Prometheus.InstallWriter, Prometheus.DeployRemote, Apps.Deploy)
 
@@ -185,6 +185,10 @@ func (Prometheus) Forward() error {
 }
 
 func (LGTM) Deploy() error {
+	if err := sh.RunV("helm", "repo", "add", "grafana", "https://grafana.github.io/helm-charts"); err != nil {
+		return err
+	}
+
 	if err := sh.RunV("helm", "upgrade", "-f", "deploy/lgtm/values.yaml", "observability-stack", "grafana/lgtm-distributed", "--create-namespace", "--namespace", "monitoring", "--install"); err != nil {
 		return err
 	}

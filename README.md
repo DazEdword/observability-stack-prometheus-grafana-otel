@@ -3,6 +3,7 @@ Observability stack with Prometheus, LGTM (Grafana), Open Telemetry.
 
 This repository includes a multi-cluster setup serving as a practical Grafana example, with Prometheus as a data source.
 The setup is based on Kind local cluster, and it's completely self contained, designed to run locally in UNIX systems.
+Sucessfully tested in Linux Mint 22 (Wilma) and macOS Sequoia 15.1.
 
 Cluster 1 (`kind-observability-stack`) has the full Grafana LGTM stack and a Prometheus instance, configured  write receiver.
 It also includes a service monitoring setup and a dashboard to monitor the Prometheus installation itself.
@@ -24,6 +25,7 @@ Pre-setup:
 Dev dependencies:
 - `mage` 1.15.0
 - `kubectl` v1.31.2
+- `kubectx` 0.9.5
 - `kind` v0.24.0
 - `kustomize` v5.4.1
 - `kubefwd` 1.22.5
@@ -35,7 +37,7 @@ Dev dependencies:
 Dev dependencies can be installed manually, or automatically via `brew`:
 
 ```sh
-# create kind observability cluster
+# install brew dev dependencies
 mage setup
 ```
 
