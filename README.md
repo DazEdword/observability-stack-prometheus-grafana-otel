@@ -28,7 +28,6 @@ Dev dependencies:
 - `kubectx` 0.9.5
 - `kind` v0.24.0
 - `kustomize` v5.4.1
-- `skaffold` v2.13.2
 - `kubefwd` 1.22.5
 - `helm` v3.15.0
 - `jq` jq-1.7.1

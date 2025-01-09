@@ -18,7 +18,7 @@ type LGTM mg.Namespace
 type Apps mg.Namespace
 
 func Setup() error {
-	if err := sh.RunV("brew", "install", "mage", "kubectl", "kubectx", "kind", "kustomize", "skaffold", "txn2/tap/kubefwd", "helm", "jq", "golangci-lint"); err != nil {
+	if err := sh.RunV("brew", "install", "mage", "kubectl", "kubectx", "kind", "kustomize", "txn2/tap/kubefwd", "helm", "jq", "golangci-lint"); err != nil {
 		return err
 	}
 
