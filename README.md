@@ -31,6 +31,7 @@ Dev dependencies:
 - `kubefwd` 1.22.5
 - `helm` v3.15.0
 - `jq` jq-1.7.1
+- `golangci-lint` 1.63.4
 
 # Installation
 
