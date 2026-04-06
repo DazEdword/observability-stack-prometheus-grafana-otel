@@ -3,7 +3,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
 
 	wait "github.com/DazEdword/observability-stack-otel/internal"
 	"github.com/bitfield/script"
@@ -17,8 +20,20 @@ type Prometheus mg.Namespace
 type LGTM mg.Namespace
 type Apps mg.Namespace
 
+// confirmAction prompts the user for confirmation
+func confirmAction(message string) (bool, error) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("%s (yes/no): ", message)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+
+	return strings.ToLower(strings.TrimSpace(input)) == "yes", nil
+}
+
 func Setup() error {
-	if err := sh.RunV("brew", "install", "mage", "kubectl", "kubectx", "kind", "kustomize", "txn2/tap/kubefwd", "helm", "jq", "golangci-lint"); err != nil {
+	if err := sh.RunV("brew", "install", "mage", "kubectl", "kubectx", "kind", "kustomize", "kubefwd", "helm", "jq", "golangci-lint"); err != nil {
 		return err
 	}
 
@@ -50,7 +65,16 @@ func (Kind) CreateOlly() error {
 }
 
 func (Kind) DeleteOlly() error {
-	// TODO confirmation prompt
+	confirmed, err := confirmAction("Are you sure you want to delete the observability-stack cluster?")
+	if err != nil {
+		return err
+	}
+
+	if !confirmed {
+		fmt.Println("Deletion cancelled.")
+		return nil
+	}
+
 	if err := sh.Run("kind", "delete", "cluster", "--name", "observability-stack"); err != nil {
 		return err
 	}
@@ -67,7 +91,16 @@ func (Kind) CreateApps() error {
 }
 
 func (Kind) DeleteApps() error {
-	// TODO confirmation prompt
+	confirmed, err := confirmAction("Are you sure you want to delete the demo-apps cluster?")
+	if err != nil {
+		return err
+	}
+
+	if !confirmed {
+		fmt.Println("Deletion cancelled.")
+		return nil
+	}
+
 	if err := sh.RunV("kind", "delete", "cluster", "--name", "demo-apps"); err != nil {
 		return err
 	}

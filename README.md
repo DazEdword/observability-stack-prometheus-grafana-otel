@@ -1,4 +1,5 @@
 # Observability Stack
+
 Observability stack with Prometheus, LGTM (Grafana), Open Telemetry.
 
 This repository includes a multi-cluster setup serving as a practical Grafana example, with Prometheus as a data source.
@@ -16,24 +17,26 @@ an example app generating metrics that are sent remotely.
 Helm chart available: https://github.com/grafana/helm-charts/releases/tag/lgtm-distributed-2.1.0
 Default values: https://github.com/grafana/helm-charts/blob/main/charts/lgtm-distributed/values.yaml
 
-# Prerequirements
+## Prerequirements
 
 Pre-setup:
-- `go` 1.23
-- `brew` 4.4.3
+
+- `go` 1.26
+- `brew` 5.1.4
 
 Dev dependencies:
-- `mage` 1.15.0
-- `kubectl` v1.31.2
-- `kubectx` 0.9.5
-- `kind` v0.24.0
-- `kustomize` v5.4.1
-- `kubefwd` 1.22.5
-- `helm` v3.15.0
-- `jq` jq-1.7.1
-- `golangci-lint` 1.63.4
 
-# Installation
+- `mage` 1.17.0
+- `kubectl` v1.35.2
+- `kubectx` 0.11.0
+- `kind` v0.31.0
+- `kustomize` v5.5.0
+- `kubefwd` 1.25.13
+- `helm` v3.16.2
+- `jq` jq-1.8.1
+- `golangci-lint` 2.11.3
+
+## Installation
 
 Dev dependencies can be installed manually, or automatically via `brew`:
 
@@ -49,14 +52,13 @@ Feel free to use this installation if you start form scratch, and prefer to have
 > **_NOTE:_**  Make sure to have all prerequirements correctly installed before attempting the automated installation.
 
 ```sh
-# create kind observability cluster
+# create all clusters, install all applications
 mage all
 ```
 
 ## Option 2: Manual (Mage)
 
 Run every step only after successful completion of the previous one, in the order specified below.
-
 
 ```sh
 # create kind observability cluster
@@ -98,8 +100,7 @@ mage prometheus:deployremote
 mage apps:deploy
 ```
 
-
-# Usage
+## Usage
 
 The stack is configured to include the `prometheus` data source and a `prometheus` example dashboard, as defined in `deploy/lgtm/values.yaml`.
 After forwarding Grafana, the application will be available at `http://localhost:3000`.
@@ -123,10 +124,10 @@ mage prometheus:forward
 ```
 
 Some useful URLs:
+
 - http://localhost:30900/config
 - http://localhost:30900/targets: shows global cluster targets
 - http://localhost:30900/graph: metrics explorer will show metrics from both the global and writer clusters.
-
 
 When configuring `prometheus` as a data source in `grafana`, the host machine IP needs to be used instead, followed by the exposed service.
 Kind's host machine IP is always `172.19.0.1`, and as such it can be used reliably to point to the exposed `prometheus` instance.
@@ -135,13 +136,11 @@ Kind's host machine IP is always `172.19.0.1`, and as such it can be used reliab
 > **_NOTE:_**  The node's Internal IP could be use instead and it would similarly work. Find the node's internal IP with the command `kubectl get nodes -o wide`.
 > **_NOTE:_**  If the Grafana and Prometheus setups live within the same cluster, the internal service can also be used: `http://prometheus-operated.default.svc:9090`.
 
-# Learn more
+## Learn more
+
 - [Open Telemetry](https://opentelemetry.io/docs/languages/go/getting-started/)
 - [Prometheus CRDs](https://doc.crds.dev/github.com/prometheus-operator/prometheus-operator/monitoring.coreos.com/Prometheus/v1@v0.77.1)
 - [Prometheus Remote Write](https://last9.io/blog/what-is-prometheus-remote-write/)
 - [Prometheus Multi Cluster](https://sysrant.com/posts/prometheus-multi-cluster/)
 - [Grafana Provisioning](https://grafana.com/tutorials/provision-dashboards-and-data-sources/)
 - [Grafana Data Source - Prometheus](https://grafana.com/docs/grafana/latest/datasources/prometheus/)
-
-
-
