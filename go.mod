@@ -1,11 +1,11 @@
 module github.com/DazEdword/observability-stack-otel
 
-go 1.23.2
+go 1.26.1
 
 require (
 	github.com/bitfield/script v0.22.1
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/magefile/mage v1.15.0
+	github.com/magefile/mage v1.17.1
 )
 
 require (
