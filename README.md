@@ -12,6 +12,31 @@ It also includes a service monitoring setup and a dashboard to monitor the Prome
 Cluster 2 (`kind-demo-apps`) has another Prometheus instance, this time configured as a remote writer and pointing to the global instance, and
 an example app generating metrics that are sent remotely.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph OLLY["Cluster 1 · kind-observability-stack"]
+        LGTM["LGTM stack<br/>Grafana · Loki · Mimir · Tempo"]
+        PG["Prometheus global<br/>write receiver<br/>NodePort :30900"]
+    end
+
+    subgraph APPS["Cluster 2 · kind-demo-apps"]
+        PW["Prometheus writer"]
+        APP["example-app<br/>3 replicas · :8080/metrics"]
+    end
+
+    APP -->|scrape| PW
+    PW -->|"remote write via host 172.19.0.1:30900"| PG
+    LGTM -->|"PromQL data source<br/>http://172.19.0.1:30900"| PG
+```
+
+Full diagrams live in [`docs/`](docs):
+
+- [docs/architecture.md](docs/architecture.md) — component diagram and Kubernetes resource relationships
+- [docs/data-flow.md](docs/data-flow.md) — metrics pipeline from app scrape to Grafana dashboard
+- [docs/deployment.md](docs/deployment.md) — Mage orchestration and step-by-step deployment flow
+
 ## Grafana
 
 Helm chart available: https://github.com/grafana/helm-charts/releases/tag/lgtm-distributed-2.1.0
